@@ -211,7 +211,7 @@ sudo su $OE_USER -c "cd $OE_HOME"
 # Path to the virtual environment
 venv_path="/$OE_HOME/${OE_USER}-venv"
 #reCreate a new Python virtual environment for Odoo
-sudo su $OE_USER -c "python3 -m venv $$venv_path"
+sudo su $OE_USER -c "python3 -m venv $venv_path"
 # Activate the virtual environment using sudo
 echo -e "\n---- Install python packages/requirements ----"
 sudo -H -u "$OE_USER" bash -c "source $venv_path/bin/activate && exec bash && pip3 install wheel && pip3 install -r $OE_HOME/$OE_CONFIG/requirements.txt && deactivate"
