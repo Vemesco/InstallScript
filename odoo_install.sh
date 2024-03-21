@@ -35,15 +35,15 @@ INSTALL_NGINX="False"
 # Set the superadmin password - if GENERATE_RANDOM_PASSWORD is set to "True" we will automatically generate a random password, otherwise we use this one
 OE_SUPERADMIN="admin"
 # Set to "True" to generate a random password, "False" to use the variable in OE_SUPERADMIN
-GENERATE_RANDOM_PASSWORD="True"
+GENERATE_RANDOM_PASSWORD="False"
 # Set the website name
 WEBSITE_NAME="_"
 # Set the default Odoo longpolling port (you still have to use -c /etc/odoo-server.conf for example to use this.)
 LONGPOLLING_PORT="8072"
 # Set to "True" to install certbot and have ssl enabled, "False" to use http
-ENABLE_SSL="True"
+ENABLE_SSL="False"
 # Provide Email to register ssl certificate
-ADMIN_EMAIL="odoo@example.com"
+ADMIN_EMAIL="admin"
 ##
 ###  WKHTMLTOPDF download links
 ## === Ubuntu Trusty x64 & x32 === (for other distributions please replace these two links,
@@ -66,13 +66,21 @@ fi
 # Update Server
 #--------------------------------------------------
 echo -e "\n---- Update Server ----"
-# universe package is for Ubuntu 18.x
+# universe package is for Ubuntu
 sudo add-apt-repository universe
 # libpng12-0 dependency for wkhtmltopdf for older Ubuntu versions
 sudo add-apt-repository "deb http://mirrors.kernel.org/ubuntu/ xenial main"
 sudo apt-get update
 sudo apt-get upgrade -y
 sudo apt-get install libpq-dev
+
+echo -e "\n---- Install GIT, PIP, NODE.JS and tools ----"
+#sudo apt install software-properties-common
+#sudo add-apt-repository ppa:deadsnakes/ppa
+sudo apt install python3
+sudo apt install git python3-pip build-essential wget python3-dev python3-venv  python3-wheel libfreetype6-dev libxml2-dev libzip-dev libldap2-dev libsasl2-dev python3-setuptools node-less libjpeg-dev zlib1g-dev libpq-dev libxslt1-dev libldap2-dev libtiff5-dev libjpeg8-dev libopenjp2-7-dev liblcms2-dev libwebp-dev libharfbuzz-dev libfribidi-dev libxcb1-dev
+
+
 
 #--------------------------------------------------
 # Install PostgreSQL Server
@@ -97,7 +105,7 @@ sudo su - postgres -c "createuser -s $OE_USER" 2> /dev/null || true
 # Install Wkhtmltopdf if needed
 #--------------------------------------------------
 if [ $INSTALL_WKHTMLTOPDF = "True" ]; then
-  echo -e "\n---- Install wkhtml and place shortcuts on correct place for ODOO 13 ----"
+  echo -e "\n---- Install wkhtml and place shortcuts on correct place for ODOO ----"
   #pick up correct one from x64 & x32 versions:
   if [ "`getconf LONG_BIT`" == "64" ];then
       _url=$WKHTMLTOX_X64
@@ -163,15 +171,13 @@ if [ $IS_ENTERPRISE = "True" ]; then
 fi
 
 echo -e "\n---- Create custom module directory ----"
-#sudo su $OE_USER -c "mkdir $OE_HOME/addons"
+sudo su $OE_USER -c "mkdir $OE_HOME"
 sudo su $OE_USER -c "mkdir $OE_HOME/${OE_USER}-custom-addons"
 
 echo -e "\n---- Setting permissions on home folder ----"
-sudo chown -R $OE_USER:$OE_USER $OE_HOME/*
+sudo chown -R $OE_USER:$OE_USER $OE_HOME
 
 echo -e "* Create server config file"
-
-
 sudo touch /etc/${OE_CONFIG}.conf
 echo -e "* Creating server config file"
 sudo su root -c "printf '[options] \n; This is the password that allows database operations:\n' >> /etc/${OE_CONFIG}.conf"
@@ -192,35 +198,36 @@ if [ $IS_ENTERPRISE = "True" ]; then
 else
     sudo su root -c "printf 'addons_path=${OE_HOME}/${OE_USER}-custom-addons,${OE_HOME_EXT}/addons\n' >> /etc/${OE_CONFIG}.conf"
 fi
+
+echo -e "\n---- Setting permissions on config file ----"
 sudo chown $OE_USER:$OE_USER /etc/${OE_CONFIG}.conf
 sudo chmod 640 /etc/${OE_CONFIG}.conf
 
-echo -e "* Create startup file"
-sudo su root -c "echo '#!/bin/sh' >> $OE_HOME_EXT/start.sh"
-sudo su root -c "echo 'sudo -u $OE_USER $OE_HOME_EXT/odoo-bin --config=/etc/${OE_CONFIG}.conf' >> $OE_HOME_EXT/start.sh"
-sudo chmod 755 $OE_HOME_EXT/start.sh
+#echo -e "* Create startup file"
+#sudo su root -c "echo '#!/bin/sh' >> $OE_HOME_EXT/start.sh"
+#sudo su root -c "echo 'sudo -u $OE_USER $OE_HOME_EXT/odoo-bin --config=/etc/${OE_CONFIG}.conf' >> $OE_HOME_EXT/start.sh"
+#sudo chmod 755 $OE_HOME_EXT/start.sh
 
 #--------------------------------------------------
 # Install Dependencies
 #--------------------------------------------------
 echo -e "\n--- Installing Python 3 + pip3 --"
-sudo su $OE_USER
-cd $OE_HOME
+sudo su $OE_USER -c "cd $OE_HOME"
 #reCreate a new Python virtual environment for Odoo
-python3.8 -m venv ${OE_USER}-venv
+sudo su $OE_USER -c "python3 -m venv $OE_HOME/${OE_USER}-venv"
 #Activate the virtual environment
-source ${OE_USER}-venv/bin/activate
-pip3 install wheel
+sudo su $OE_USER -c "source $OE_HOME/${OE_USER}-venv/bin/activate"
+sudo su $OE_USER -c "pip3 install wheel"
 echo -e "\n---- Install python packages/requirements ----"
-pip3 install -r $OE_CONFIG/requirements.txt
+sudo su $OE_USER -c "pip3 install -r $OE_HOME/$OE_CONFIG/requirements.txt"
 #sudo -H pip3 install -r https://github.com/odoo/odoo/raw/${OE_VERSION}/requirements.txt
 #Deactivate Virtual environment
-deactivate
-exit
+sudo su $OE_USER -c "deactivate"
 
-echo -e "\n---- Installing nodeJS NPM and rtlcss for LTR support ----"
-sudo apt-get install nodejs npm -y
-sudo npm install -g rtlcss
+
+#echo -e "\n---- Installing nodeJS NPM and rtlcss for LTR support ----"
+#sudo apt-get install nodejs npm -y
+#sudo npm install -g rtlcss
 
 
 #--------------------------------------------------
@@ -228,7 +235,7 @@ sudo npm install -g rtlcss
 #--------------------------------------------------
 
 echo -e "* Create init file"
-cat <<EOF > /etc/systemd/system/$OE_USER.service
+cat <<EOF > ~/$OE_USER.service
 [Unit]
 Description=$OE_USER
 Requires=postgresql.service
@@ -240,12 +247,15 @@ SyslogIdentifier=$OE_USER
 PermissionsStartOnly=true
 User=$OE_USER
 Group=$OE_USER
-ExecStart=$OE_HOME/$OE_USER-venv/bin/python3 $OE_HOME/$OE_USER/odoo-bin -c /etc/$OE_CONFIG.conf
+ExecStart=$OE_HOME/$OE_USER-venv/bin/python3 $OE_HOME/$OE_CONFIG/odoo-bin -c /etc/$OE_CONFIG.conf
 StandardOutput=journal+console
 
 [Install]
 WantedBy=multi-user.target
 EOF
+
+sudo mv ~/$OE_USER.service /etc/systemd/system/$OE_USER.service
+
 #Notify systemd that a new unit file exists
 sudo systemctl daemon-reload
 #Start the Odoo service and enable it to start on boot by running:
@@ -442,7 +452,7 @@ else
 fi
 
 echo -e "* Starting Odoo Service"
-sudo su root -c "/etc/init.d/$OE_CONFIG start"
+#sudo su root -c "/etc/init.d/$OE_CONFIG start"
 echo "-----------------------------------------------------------"
 echo "Done! The Odoo server is up and running. Specifications:"
 echo "Port: $OE_PORT"
@@ -450,12 +460,12 @@ echo "User service: $OE_USER"
 echo "Configuraton file location: /etc/${OE_CONFIG}.conf"
 echo "Logfile location: /var/log/$OE_USER"
 echo "User PostgreSQL: $OE_USER"
-echo "Code location: $OE_USER"
-echo "Addons folder: $OE_USER/$OE_CONFIG/addons/"
+echo "Code location: $OE_HOME/$OE_CONFIG"
+echo "Addons folder: $OE_HOME/$OE_CONFIG/addons/"
 echo "Password superadmin (database): $OE_SUPERADMIN"
-echo "Start Odoo service: sudo service $OE_CONFIG start"
-echo "Stop Odoo service: sudo service $OE_CONFIG stop"
-echo "Restart Odoo service: sudo service $OE_CONFIG restart"
+echo "Start Odoo service: sudo service $OE_USER start"
+echo "Stop Odoo service: sudo service $OE_USER stop"
+echo "Restart Odoo service: sudo service $OE_USER restart"
 if [ $INSTALL_NGINX = "True" ]; then
   echo "Nginx configuration file: /etc/nginx/sites-available/$WEBSITE_NAME"
 fi
