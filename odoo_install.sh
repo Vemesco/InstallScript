@@ -33,7 +33,7 @@ INSTALL_POSTGRESQL_FOURTEEN="True"
 # Set this to True if you want to install Nginx!
 INSTALL_NGINX="False"
 # Set the superadmin password - if GENERATE_RANDOM_PASSWORD is set to "True" we will automatically generate a random password, otherwise we use this one
-OE_SUPERADMIN="admin"
+OE_SUPERADMIN="admin@vemesco.com"
 # Set to "True" to generate a random password, "False" to use the variable in OE_SUPERADMIN
 GENERATE_RANDOM_PASSWORD="False"
 # Set the website name
@@ -203,26 +203,21 @@ echo -e "\n---- Setting permissions on config file ----"
 sudo chown $OE_USER:$OE_USER /etc/${OE_CONFIG}.conf
 sudo chmod 640 /etc/${OE_CONFIG}.conf
 
-#echo -e "* Create startup file"
-#sudo su root -c "echo '#!/bin/sh' >> $OE_HOME_EXT/start.sh"
-#sudo su root -c "echo 'sudo -u $OE_USER $OE_HOME_EXT/odoo-bin --config=/etc/${OE_CONFIG}.conf' >> $OE_HOME_EXT/start.sh"
-#sudo chmod 755 $OE_HOME_EXT/start.sh
-
 #--------------------------------------------------
 # Install Dependencies
 #--------------------------------------------------
 echo -e "\n--- Installing Python 3 + pip3 --"
 sudo su $OE_USER -c "cd $OE_HOME"
+# Path to the virtual environment
+venv_path="/$OE_HOME/${OE_USER}-venv"
 #reCreate a new Python virtual environment for Odoo
-sudo su $OE_USER -c "python3 -m venv $OE_HOME/${OE_USER}-venv"
-#Activate the virtual environment
-sudo su $OE_USER -c "source $OE_HOME/${OE_USER}-venv/bin/activate"
-sudo su $OE_USER -c "pip3 install wheel"
+sudo su $OE_USER -c "python3 -m venv $$venv_path"
+# Activate the virtual environment using sudo
 echo -e "\n---- Install python packages/requirements ----"
-sudo su $OE_USER -c "pip3 install -r $OE_HOME/$OE_CONFIG/requirements.txt"
+sudo -H -u "$OE_USER" bash -c "source $venv_path/bin/activate && exec bash && pip3 install wheel && pip3 install -r $OE_HOME/$OE_CONFIG/requirements.txt && deactivate"
+
 #sudo -H pip3 install -r https://github.com/odoo/odoo/raw/${OE_VERSION}/requirements.txt
 #Deactivate Virtual environment
-sudo su $OE_USER -c "deactivate"
 
 
 #echo -e "\n---- Installing nodeJS NPM and rtlcss for LTR support ----"
@@ -260,82 +255,6 @@ sudo mv ~/$OE_USER.service /etc/systemd/system/$OE_USER.service
 sudo systemctl daemon-reload
 #Start the Odoo service and enable it to start on boot by running:
 sudo systemctl enable --now $OE_USER
-
-
-
-#cat <<EOF > ~/$OE_CONFIG
-##!/bin/sh
-#### BEGIN INIT INFO
-## Provides: $OE_CONFIG
-## Required-Start: \$remote_fs \$syslog
-## Required-Stop: \$remote_fs \$syslog
-## Should-Start: \$network
-## Should-Stop: \$network
-## Default-Start: 2 3 4 5
-## Default-Stop: 0 1 6
-## Short-Description: Enterprise Business Applications
-## Description: ODOO Business Applications
-#### END INIT INFO
-#PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin
-#DAEMON=$OE_HOME_EXT/odoo-bin
-#NAME=$OE_CONFIG
-#DESC=$OE_CONFIG
-## Specify the user name (Default: odoo).
-#USER=$OE_USER
-## Specify an alternate config file (Default: /etc/openerp-server.conf).
-#CONFIGFILE="/etc/${OE_CONFIG}.conf"
-## pidfile
-#PIDFILE=/var/run/\${NAME}.pid
-## Additional options that are passed to the Daemon.
-#DAEMON_OPTS="-c \$CONFIGFILE"
-#[ -x \$DAEMON ] || exit 0
-#[ -f \$CONFIGFILE ] || exit 0
-#checkpid() {
-#[ -f \$PIDFILE ] || return 1
-#pid=\`cat \$PIDFILE\`
-#[ -d /proc/\$pid ] && return 0
-#return 1
-#}
-#case "\${1}" in
-#start)
-#echo -n "Starting \${DESC}: "
-#start-stop-daemon --start --quiet --pidfile \$PIDFILE \
-#--chuid \$USER --background --make-pidfile \
-#--exec \$DAEMON -- \$DAEMON_OPTS
-#echo "\${NAME}."
-#;;
-#stop)
-#echo -n "Stopping \${DESC}: "
-#start-stop-daemon --stop --quiet --pidfile \$PIDFILE \
-#--oknodo
-#echo "\${NAME}."
-#;;
-#restart|force-reload)
-#echo -n "Restarting \${DESC}: "
-#start-stop-daemon --stop --quiet --pidfile \$PIDFILE \
-#--oknodo
-#sleep 1
-#start-stop-daemon --start --quiet --pidfile \$PIDFILE \
-#--chuid \$USER --background --make-pidfile \
-#--exec \$DAEMON -- \$DAEMON_OPTS
-#echo "\${NAME}."
-#;;
-#*)
-#N=/etc/init.d/\$NAME
-#echo "Usage: \$NAME {start|stop|restart|force-reload}" >&2
-#exit 1
-#;;
-#esac
-#exit 0
-#EOF
-#
-#echo -e "* Security Init File"
-#sudo mv ~/$OE_CONFIG /etc/init.d/$OE_CONFIG
-#sudo chmod 755 /etc/init.d/$OE_CONFIG
-#sudo chown root: /etc/init.d/$OE_CONFIG
-#
-#echo -e "* Start ODOO on Startup"
-#sudo update-rc.d $OE_CONFIG defaults
 
 #--------------------------------------------------
 # Install Nginx if needed
@@ -452,7 +371,6 @@ else
 fi
 
 echo -e "* Starting Odoo Service"
-#sudo su root -c "/etc/init.d/$OE_CONFIG start"
 echo "-----------------------------------------------------------"
 echo "Done! The Odoo server is up and running. Specifications:"
 echo "Port: $OE_PORT"
