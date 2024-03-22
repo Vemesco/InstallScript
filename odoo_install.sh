@@ -14,7 +14,7 @@
 # ./odoo-install
 ################################################################################
 
-OE_USER="odoo"
+OE_USER="odoo16"
 OE_HOME="/opt/$OE_USER"
 OE_CONFIG="${OE_USER}-server"
 OE_HOME_EXT="$OE_HOME/$OE_CONFIG"
@@ -392,3 +392,4 @@ if [ $INSTALL_NGINX = "True" ]; then
   echo "Nginx configuration file: /etc/nginx/sites-available/$WEBSITE_NAME"
 fi
 echo "-----------------------------------------------------------"
+sudo systemctl status $OE_USER.service
