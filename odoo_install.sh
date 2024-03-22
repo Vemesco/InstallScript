@@ -14,7 +14,7 @@
 # ./odoo-install
 ################################################################################
 
-OE_USER="odoo14"
+OE_USER="odoo10"
 OE_HOME="/opt/$OE_USER"
 OE_CONFIG="${OE_USER}-server"
 OE_HOME_EXT="$OE_HOME/$OE_CONFIG"
@@ -25,11 +25,11 @@ INSTALL_WKHTMLTOPDF="True"
 OE_PORT="8069"
 # Choose the Odoo version which you want to install. For example: 16.0, 15.0, 14.0 or saas-22. When using 'master' the master version will be installed.
 # IMPORTANT! This script contains extra libraries that are specifically needed for Odoo 16.0
-OE_VERSION="14.0"
+OE_VERSION="10.0"
 # Set this to True if you want to install the Odoo enterprise version!
 IS_ENTERPRISE="False"
 # Installs postgreSQL V14 instead of defaults (e.g V12 for Ubuntu 20/22) - this improves performance
-INSTALL_POSTGRESQL_FOURTEEN="True"
+INSTALL_POSTGRESQL_FOURTEEN="False"
 # Set this to True if you want to install Nginx!
 INSTALL_NGINX="False"
 # Set the superadmin password - if GENERATE_RANDOM_PASSWORD is set to "True" we will automatically generate a random password, otherwise we use this one
@@ -74,12 +74,6 @@ sudo apt-get update
 sudo apt-get upgrade -y
 sudo apt-get install libpq-dev
 
-echo -e "\n---- Install GIT, PIP, NODE.JS and tools ----"
-sudo apt install python3
-sudo apt install git python3-pip build-essential wget python3-dev python3-venv  python3-wheel libfreetype6-dev libxml2-dev libzip-dev libldap2-dev libsasl2-dev python3-setuptools node-less libjpeg-dev zlib1g-dev libpq-dev libxslt1-dev libldap2-dev libtiff5-dev libjpeg8-dev libopenjp2-7-dev liblcms2-dev libwebp-dev libharfbuzz-dev libfribidi-dev libxcb1-dev
-
-
-
 #--------------------------------------------------
 # Install PostgreSQL Server
 #--------------------------------------------------
@@ -91,8 +85,8 @@ if [ $INSTALL_POSTGRESQL_FOURTEEN = "True" ]; then
     sudo apt-get update
     sudo apt-get install postgresql-14
 else
-    echo -e "\n---- Installing the default postgreSQL version based on Linux version ----"
-    sudo apt-get install postgresql postgresql-server-dev-all -y
+    echo -e "\n---- Installing the default postgreSQL version 9.5 for Odoov10 ----"
+    sudo apt install postgresql-9.5 -y
 fi
 
 
@@ -152,16 +146,20 @@ sudo chown -R $OE_USER:$OE_USER $OE_HOME
 #--------------------------------------------------
 # Install Dependencies
 #--------------------------------------------------
-echo -e "\n--- Installing Python 3 + pip3 --"
+echo -e "\n--- Installing Python 2.7 + pip --"
+sudo wget https://bootstrap.pypa.io/pip/2.7/get-pip.py
+sudo python2.7 get-pip.py
+echo -e "\n--- Verify Python Version --"
+sudo python2.7 -m pip --version
+sudo python2.7 -m pip install virtualenv
+
 # Path to the virtual environment
 venv_path="/$OE_HOME/$OE_USER-venv"
 #Create a new Python virtual environment for Odoo
-sudo su $OE_USER -c "python3 -m venv $venv_path"
+sudo su $OE_USER -c "python2.7 -m virtualenv $venv_path"
 # Activate the virtual environment using sudo
 echo -e "\n---- Install python packages/requirements ----"
-sudo -H -u "$OE_USER" bash -c "source $venv_path/bin/activate && pip3 install wheel && pip3 install -r $OE_HOME_EXT/requirements.txt && deactivate"
-
-#sudo -H pip3 install -r https://github.com/odoo/odoo/raw/${OE_VERSION}/requirements.txt
+sudo -H -u "$OE_USER" bash -c "source $venv_path/bin/activate && pip install wheel && pip install -r $OE_HOME_EXT/requirements.txt && deactivate"
 
 if [ $IS_ENTERPRISE = "True" ]; then
     # Odoo Enterprise install!
@@ -237,7 +235,7 @@ SyslogIdentifier=$OE_USER
 PermissionsStartOnly=true
 User=$OE_USER
 Group=$OE_USER
-ExecStart=$OE_HOME/$OE_USER-venv/bin/python3 $OE_HOME/$OE_CONFIG/odoo-bin -c /etc/$OE_CONFIG.conf
+ExecStart=$OE_HOME/$OE_USER-venv/bin/python2 $OE_HOME/$OE_CONFIG/odoo-bin -c /etc/$OE_CONFIG.conf
 StandardOutput=journal+console
 Restart=always
 RestartSec=5
