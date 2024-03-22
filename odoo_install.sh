@@ -33,7 +33,7 @@ INSTALL_POSTGRESQL_FOURTEEN="True"
 # Set this to True if you want to install Nginx!
 INSTALL_NGINX="False"
 # Set the superadmin password - if GENERATE_RANDOM_PASSWORD is set to "True" we will automatically generate a random password, otherwise we use this one
-OE_SUPERADMIN="admin@vemesco.com"
+OE_SUPERADMIN="admin"
 # Set to "True" to generate a random password, "False" to use the variable in OE_SUPERADMIN
 GENERATE_RANDOM_PASSWORD="False"
 # Set the website name
@@ -43,7 +43,7 @@ LONGPOLLING_PORT="8072"
 # Set to "True" to install certbot and have ssl enabled, "False" to use http
 ENABLE_SSL="False"
 # Provide Email to register ssl certificate
-ADMIN_EMAIL="admin"
+ADMIN_EMAIL="admin@vemesco.com"
 ##
 ###  WKHTMLTOPDF download links
 ## === Ubuntu Trusty x64 & x32 === (for other distributions please replace these two links,
@@ -75,8 +75,6 @@ sudo apt-get upgrade -y
 sudo apt-get install libpq-dev
 
 echo -e "\n---- Install GIT, PIP, NODE.JS and tools ----"
-#sudo apt install software-properties-common
-#sudo add-apt-repository ppa:deadsnakes/ppa
 sudo apt install python3
 sudo apt install git python3-pip build-essential wget python3-dev python3-venv  python3-wheel libfreetype6-dev libxml2-dev libzip-dev libldap2-dev libsasl2-dev python3-setuptools node-less libjpeg-dev zlib1g-dev libpq-dev libxslt1-dev libldap2-dev libtiff5-dev libjpeg8-dev libopenjp2-7-dev liblcms2-dev libwebp-dev libharfbuzz-dev libfribidi-dev libxcb1-dev
 
@@ -207,22 +205,20 @@ sudo chmod 640 /etc/${OE_CONFIG}.conf
 # Install Dependencies
 #--------------------------------------------------
 echo -e "\n--- Installing Python 3 + pip3 --"
-sudo su $OE_USER -c "cd $OE_HOME"
 # Path to the virtual environment
 venv_path="/$OE_HOME/${OE_USER}-venv"
-#reCreate a new Python virtual environment for Odoo
+#Create a new Python virtual environment for Odoo
 sudo su $OE_USER -c "python3 -m venv $venv_path"
 # Activate the virtual environment using sudo
 echo -e "\n---- Install python packages/requirements ----"
-sudo -H -u "$OE_USER" bash -c "source $venv_path/bin/activate && exec bash && pip3 install wheel && pip3 install -r $OE_HOME/$OE_CONFIG/requirements.txt && deactivate"
+sudo -H -u "$OE_USER" bash -c "source $venv_path/bin/activate && pip3 install wheel && pip3 install -r $OE_HOME/$OE_CONFIG/requirements.txt && deactivate"
 
 #sudo -H pip3 install -r https://github.com/odoo/odoo/raw/${OE_VERSION}/requirements.txt
-#Deactivate Virtual environment
 
 
-#echo -e "\n---- Installing nodeJS NPM and rtlcss for LTR support ----"
-#sudo apt-get install nodejs npm -y
-#sudo npm install -g rtlcss
+echo -e "\n---- Installing nodeJS NPM and rtlcss for LTR support ----"
+sudo apt-get install nodejs npm -y
+sudo npm install -g rtlcss
 
 
 #--------------------------------------------------
