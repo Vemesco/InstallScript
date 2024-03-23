@@ -53,7 +53,8 @@ ADMIN_EMAIL="admin@vemesco.com"
 
 # Check if the operating system is Ubuntu 22.04
 if [[ $(lsb_release -r -s) == "22.04" ]]; then
-    WKHTMLTOX_X64="https://packages.ubuntu.com/jammy/wkhtmltopdf"
+    #WKHTMLTOX_X64="https://packages.ubuntu.com/jammy/wkhtmltopdf"
+    WKHTMLTOX_X64="https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.5/wkhtmltox_0.12.5-1.bionic_amd64.deb"
     WKHTMLTOX_X32="https://packages.ubuntu.com/jammy/wkhtmltopdf"
     #No Same link works for both 64 and 32-bit on Ubuntu 22.04
 else
@@ -66,13 +67,10 @@ fi
 # Update Server
 #--------------------------------------------------
 echo -e "\n---- Update Server ----"
-# universe package is for Ubuntu
-sudo add-apt-repository universe
-# libpng12-0 dependency for wkhtmltopdf for older Ubuntu versions
-sudo add-apt-repository "deb http://mirrors.kernel.org/ubuntu/ xenial main"
+echo "deb http://security.ubuntu.com/ubuntu focal-security main" | sudo tee /etc/apt/sources.list.d/focal-security.list
 sudo apt-get update
 sudo apt-get upgrade -y
-sudo apt-get install libpq-dev
+sudo apt install libssl1.1 node-less python2-dev build-essential  libldap2-dev libsasl2-dev slapd ldap-utils tox valgrind libxml2-dev libxslt-dev
 
 #--------------------------------------------------
 # Install PostgreSQL Server
@@ -86,6 +84,9 @@ if [ $INSTALL_POSTGRESQL_FOURTEEN = "True" ]; then
     sudo apt-get install postgresql-14
 else
     echo -e "\n---- Installing the default postgreSQL version 9.5 for Odoov10 ----"
+    sudo curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc|sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/postgresql.gpg
+    sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+    sudo apt-get update
     sudo apt install postgresql-9.5 -y
 fi
 
@@ -115,8 +116,8 @@ if [ $INSTALL_WKHTMLTOPDF = "True" ]; then
     sudo gdebi --n `basename $_url`
   fi
   
-  sudo ln -s /usr/local/bin/wkhtmltopdf /usr/bin
-  sudo ln -s /usr/local/bin/wkhtmltoimage /usr/bin
+  #sudo ln -s /usr/local/bin/wkhtmltopdf /usr/bin
+  #sudo ln -s /usr/local/bin/wkhtmltoimage /usr/bin
 else
   echo "Wkhtmltopdf isn't installed due to the choice of the user!"
 fi
@@ -134,7 +135,7 @@ sudo chown $OE_USER:$OE_USER /var/log/$OE_USER
 # Install ODOO
 #--------------------------------------------------
 echo -e "\n==== Installing ODOO Server ===="
-sudo git clone --depth 1 --branch $OE_VERSION https://www.github.com/odoo/odoo $OE_HOME_EXT/
+sudo git clone --depth 1 --branch $OE_VERSION --single-branch https://www.github.com/odoo/odoo $OE_HOME_EXT/
 
 echo -e "\n---- Create custom module directory ----"
 sudo su $OE_USER -c "mkdir $OE_HOME_EXT/enterprise-addons"
@@ -147,19 +148,133 @@ sudo chown -R $OE_USER:$OE_USER $OE_HOME
 # Install Dependencies
 #--------------------------------------------------
 echo -e "\n--- Installing Python 2.7 + pip --"
+sudo apt install python2.7 python2.7-dev
 sudo wget https://bootstrap.pypa.io/pip/2.7/get-pip.py
-sudo python2.7 get-pip.py
+sudo python2 get-pip.py
 echo -e "\n--- Verify Python Version --"
-sudo python2.7 -m pip --version
-sudo python2.7 -m pip install virtualenv
+sudo python2 -m pip --version
+sudo python2 -m pip install virtualenv
+
+echo -e "\n--- Create custo requirements file --"
+cat <<EOF > ~/requirements_vmc.txt
+asn1crypto ==1.4.0
+Babel==2.3.4
+backports-abc==0.5
+backports.functools-lru-cache==1.6.4
+backports.shutil-get-terminal-size==1.0.0
+beautifulsoup4==4.6.0
+bkcharts==0.2
+bokeh==0.12.7
+certifi==2021.10.8
+cffi==1.14.6
+chardet==3.0.4
+cryptography==3.3.2
+decorator==4.4.2
+docopt==0.6.2
+docutils==0.12
+ebaysdk==2.1.4
+enum34==1.1.10
+feedparser==5.2.1
+funcsigs==1.0.2
+futures==3.3.0
+gevent==1.1.2
+google-api-python-client==1.6.6
+greenlet==0.4.10
+httplib2==0.11.3
+idna==2.7
+ipaddress==1.0.23
+ipython==5.8.0
+ipython-genutils==0.2.0
+jcconv==0.2.3
+Jinja2==2.8
+lxml==4.6.3
+Mako==1.0.4
+MarkupSafe==0.23
+mock==2.0.0
+num2words==0.5.12
+numpy==1.16.4
+oauth2client==4.1.2
+ofxparse==0.16
+pandas==0.24.2
+passlib==1.6.5
+pathlib==1.0.1
+pathlib2==2.3.4
+pbr==3.1.1
+pexpect==4.7.0
+pg-xades==0.0.7
+pg-xmlsig==0.0.3
+phonenumbers==8.12.30
+pickleshare==0.7.5
+Pillow==3.4.1
+pip==20.3.4
+prompt-toolkit==1.0.16
+psutil==4.3.1
+psycogreen==1.0
+psycopg2==2.7.3.1
+ptyprocess==0.6.0
+py4j==0.10.9.2
+pyasn1==0.4.8
+pyasn1-modules==0.2.8
+pycparser==2.20
+pydot==1.2.3
+PyDrive==1.3.1
+Pygments==2.4.2
+pyldap==3.0.0
+pyOpenSSL==20.0.1
+pyparsing==2.1.10
+pyPdf==1.13
+pypng==0.0.20
+PyQRCode==1.2.1
+pyscopg2==66.0.2
+pyserial==3.1.1
+Python-Chart==1.39
+python-dateutil==2.5.3
+python-ldap==3.3.1
+python-openid==2.2.5
+python-stdnum==1.7
+pytz==2021.1
+pyusb==1.0.0
+PyYAML==3.12
+qrcode==5.3
+reportlab==3.3.0
+requests==2.11.1
+rsa==3.4.2
+scandir==1.10.0
+setuptools==44.1.1
+simplegeneric==0.8.1
+singledispatch==3.4.0.3
+six==1.16.0
+soupsieve==1.9.6
+suds-jurko==0.6
+tornado==5.1.1
+traitlets==4.3.2
+uritemplate==3.0.0
+urllib3==1.24.3
+validators==0.14.2
+vatnumber==1.2
+vobject==0.9.3
+wcwidth==0.1.7
+Werkzeug==0.11.11
+wheel==0.37.1
+wkhtmltopdf==0.2
+xlrd==1.0.0
+XlsxWriter==0.9.3
+xlwt==1.1.2
+xmlsig==1.0.0
+xmltodict==0.12.0
+EOF
+sudo mv ~/requirements_vmc.txt /$OE_HOME_EXT/requirements_vmc.txt
+echo -e "\n---- Setting permissions on home folder ----"
+sudo chown -R $OE_USER:$OE_USER $OE_HOME
+
 
 # Path to the virtual environment
 venv_path="/$OE_HOME/$OE_USER-venv"
 #Create a new Python virtual environment for Odoo
-sudo su $OE_USER -c "python2.7 -m virtualenv $venv_path"
+sudo su $OE_USER -c "python2 -m virtualenv $venv_path"
 # Activate the virtual environment using sudo
 echo -e "\n---- Install python packages/requirements ----"
-sudo -H -u "$OE_USER" bash -c "source $venv_path/bin/activate && pip install wheel && pip install -r $OE_HOME_EXT/requirements.txt && deactivate"
+sudo -H -u "$OE_USER" bash -c "source $venv_path/bin/activate && pip install wheel && pip install -r $OE_HOME_EXT/requirements.txt && pip install -r $OE_HOME_EXT/requirements_vmc.txt && deactivate"
 
 if [ $IS_ENTERPRISE = "True" ]; then
     # Odoo Enterprise install!
@@ -196,11 +311,12 @@ if [ $GENERATE_RANDOM_PASSWORD = "True" ]; then
     OE_SUPERADMIN=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 16 | head -n 1)
 fi
 sudo su root -c "printf 'admin_passwd = ${OE_SUPERADMIN}\n' >> /etc/${OE_CONFIG}.conf"
-if [ $OE_VERSION > "11.0" ];then
+if [ $OE_VERSION > 11.0 ];then
     sudo su root -c "printf 'http_port = ${OE_PORT}\n' >> /etc/${OE_CONFIG}.conf"
 else
     sudo su root -c "printf 'xmlrpc_port = ${OE_PORT}\n' >> /etc/${OE_CONFIG}.conf"
 fi
+sudo su root -c "printf 'db_user = $OE_USER\n' >> /etc/${OE_CONFIG}.conf"
 sudo su root -c "printf 'logfile = /var/log/${OE_USER}/${OE_CONFIG}.log\n' >> /etc/${OE_CONFIG}.conf"
 
 if [ $IS_ENTERPRISE = "True" ]; then
@@ -213,9 +329,9 @@ echo -e "\n---- Setting permissions on config file ----"
 sudo chown $OE_USER:$OE_USER /etc/${OE_CONFIG}.conf
 sudo chmod 640 /etc/${OE_CONFIG}.conf
 
-echo -e "\n---- Installing nodeJS NPM and rtlcss for LTR support ----"
-sudo apt-get install nodejs npm -y
-sudo npm install -g rtlcss
+#echo -e "\n---- Installing nodeJS NPM and rtlcss for LTR support ----"
+#sudo apt-get install nodejs npm -y
+#sudo npm install -g rtlcss
 
 
 #--------------------------------------------------
@@ -237,8 +353,8 @@ User=$OE_USER
 Group=$OE_USER
 ExecStart=$OE_HOME/$OE_USER-venv/bin/python2 $OE_HOME/$OE_CONFIG/odoo-bin -c /etc/$OE_CONFIG.conf
 StandardOutput=journal+console
-Restart=always
-RestartSec=5
+#Restart=always
+#RestartSec=5
 
 
 [Install]
