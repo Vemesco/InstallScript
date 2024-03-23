@@ -53,7 +53,7 @@ ADMIN_EMAIL="admin@vemesco.com"
 
 # Check if the operating system is Ubuntu 22.04
 if [[ $(lsb_release -r -s) == "22.04" ]]; then
-    #WKHTMLTOX_X64="https://packages.ubuntu.com/jammy/wkhtmltopdf"
+    #WKHTMLTOX_X64 modified only for odoo v10"
     WKHTMLTOX_X64="https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.5/wkhtmltox_0.12.5-1.bionic_amd64.deb"
     WKHTMLTOX_X32="https://packages.ubuntu.com/jammy/wkhtmltopdf"
     #No Same link works for both 64 and 32-bit on Ubuntu 22.04
@@ -116,8 +116,6 @@ if [ $INSTALL_WKHTMLTOPDF = "True" ]; then
     sudo gdebi --n `basename $_url`
   fi
   
-  #sudo ln -s /usr/local/bin/wkhtmltopdf /usr/bin
-  #sudo ln -s /usr/local/bin/wkhtmltoimage /usr/bin
 else
   echo "Wkhtmltopdf isn't installed due to the choice of the user!"
 fi
@@ -155,7 +153,7 @@ echo -e "\n--- Verify Python Version --"
 sudo python2 -m pip --version
 sudo python2 -m pip install virtualenv
 
-echo -e "\n--- Create custo requirements file --"
+echo -e "\n--- Create custom requirements file --"
 cat <<EOF > ~/requirements_vmc.txt
 asn1crypto ==1.4.0
 Babel==2.3.4
@@ -311,7 +309,7 @@ if [ $GENERATE_RANDOM_PASSWORD = "True" ]; then
     OE_SUPERADMIN=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 16 | head -n 1)
 fi
 sudo su root -c "printf 'admin_passwd = ${OE_SUPERADMIN}\n' >> /etc/${OE_CONFIG}.conf"
-if [ $OE_VERSION > 11.0 ];then
+if [ $OE_VERSION > "11.0" ];then
     sudo su root -c "printf 'http_port = ${OE_PORT}\n' >> /etc/${OE_CONFIG}.conf"
 else
     sudo su root -c "printf 'xmlrpc_port = ${OE_PORT}\n' >> /etc/${OE_CONFIG}.conf"
@@ -328,11 +326,6 @@ fi
 echo -e "\n---- Setting permissions on config file ----"
 sudo chown $OE_USER:$OE_USER /etc/${OE_CONFIG}.conf
 sudo chmod 640 /etc/${OE_CONFIG}.conf
-
-#echo -e "\n---- Installing nodeJS NPM and rtlcss for LTR support ----"
-#sudo apt-get install nodejs npm -y
-#sudo npm install -g rtlcss
-
 
 #--------------------------------------------------
 # Adding ODOO as a deamon (initscript)
@@ -353,8 +346,8 @@ User=$OE_USER
 Group=$OE_USER
 ExecStart=$OE_HOME/$OE_USER-venv/bin/python2 $OE_HOME/$OE_CONFIG/odoo-bin -c /etc/$OE_CONFIG.conf
 StandardOutput=journal+console
-#Restart=always
-#RestartSec=5
+Restart=always
+RestartSec=5
 
 
 [Install]
