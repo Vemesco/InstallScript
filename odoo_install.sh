@@ -211,7 +211,7 @@ venv_path="/$OE_HOME/${OE_USER}-venv"
 sudo su $OE_USER -c "python3 -m venv $venv_path"
 # Activate the virtual environment using sudo
 echo -e "\n---- Install python packages/requirements ----"
-sudo -H -u "$OE_USER" bash -c "source $venv_path/bin/activate && pip3 install wheel && pip3 install -r $OE_HOME/$OE_CONFIG/requirements.txt && deactivate"
+sudo -H -u "$OE_USER" bash -c "source $venv_path/bin/activate && pip3 install wheel && pip3 install -r $OE_HOME/$OE_CONFIG/requirements.txt && pip3 install pyopenssl==22.1.0 && deactivate"
 
 #sudo -H pip3 install -r https://github.com/odoo/odoo/raw/${OE_VERSION}/requirements.txt
 
