@@ -14,7 +14,7 @@
 # ./odoo-install
 ################################################################################
 
-OE_USER="odoo"
+OE_USER="odoo16"
 OE_HOME="/opt/$OE_USER"
 OE_CONFIG="${OE_USER}-server"
 OE_HOME_EXT="$OE_HOME/$OE_CONFIG"
@@ -142,15 +142,34 @@ sudo chown $OE_USER:$OE_USER /var/log/$OE_USER
 echo -e "\n==== Installing ODOO Server ===="
 sudo git clone --depth 1 --branch $OE_VERSION https://www.github.com/odoo/odoo $OE_HOME_EXT/
 
+echo -e "\n---- Create custom module directory ----"
+sudo su $OE_USER -c "mkdir $OE_HOME_EXT/enterprise-addons"
+sudo su $OE_USER -c "mkdir $OE_HOME/${OE_USER}-custom-addons"
+
+echo -e "\n---- Setting permissions on home folder ----"
+sudo chown -R $OE_USER:$OE_USER $OE_HOME
+
+#--------------------------------------------------
+# Install Dependencies
+#--------------------------------------------------
+echo -e "\n--- Installing Python 3 + pip3 --"
+# Path to the virtual environment
+venv_path="/$OE_HOME/$OE_USER-venv"
+#Create a new Python virtual environment for Odoo
+sudo su $OE_USER -c "python3 -m venv $venv_path"
+# Activate the virtual environment using sudo
+echo -e "\n---- Install python packages/requirements ----"
+sudo -H -u "$OE_USER" bash -c "source $venv_path/bin/activate && pip3 install wheel && pip3 install -r $OE_HOME_EXT/requirements.txt && deactivate"
+
+#sudo -H pip3 install -r https://github.com/odoo/odoo/raw/${OE_VERSION}/requirements.txt
+
 if [ $IS_ENTERPRISE = "True" ]; then
     # Odoo Enterprise install!
-    sudo pip3 install psycopg2-binary pdfminer.six
+    sudo -H -u "$OE_USER" bash -c "source $venv_path/bin/activate && pip3 install psycopg2-binary pdfminer.six && deactivate"
     echo -e "\n--- Create symlink for node"
     sudo ln -s /usr/bin/nodejs /usr/bin/node
-    sudo su $OE_USER -c "mkdir $OE_HOME/enterprise"
-    sudo su $OE_USER -c "mkdir $OE_HOME/enterprise/custom-addons"
 
-    GITHUB_RESPONSE=$(sudo git clone --depth 1 --branch $OE_VERSION https://www.github.com/odoo/enterprise "$OE_HOME/enterprise/addons" 2>&1)
+    GITHUB_RESPONSE=$(sudo git clone --depth 1 --branch $OE_VERSION https://www.github.com/odoo/enterprise "$OE_HOME_EXT/enterprise-addons" 2>&1)
     while [[ $GITHUB_RESPONSE == *"Authentication"* ]]; do
         echo "------------------------WARNING------------------------------"
         echo "Your authentication with Github has failed! Please try again."
@@ -158,22 +177,17 @@ if [ $IS_ENTERPRISE = "True" ]; then
         echo "TIP: Press ctrl+c to stop this script."
         echo "-------------------------------------------------------------"
         echo " "
-        GITHUB_RESPONSE=$(sudo git clone --depth 1 --branch $OE_VERSION https://www.github.com/odoo/enterprise "$OE_HOME/enterprise/addons" 2>&1)
+        GITHUB_RESPONSE=$(sudo git clone --depth 1 --branch $OE_VERSION https://www.github.com/odoo/enterprise "$OE_HOME_EXT/enterprise-addons" 2>&1)
     done
 
-    echo -e "\n---- Added Enterprise code under $OE_HOME/enterprise/addons ----"
+    echo -e "\n---- Setting permissions on home folder ----"
+    sudo chown -R $OE_USER:$OE_USER $OE_HOME
+    echo -e "\n---- Added Enterprise code under $OE_HOME_EXT/enterprise-addons ----"
     echo -e "\n---- Installing Enterprise specific libraries ----"
-    sudo -H pip3 install num2words ofxparse dbfread ebaysdk firebase_admin pyOpenSSL
+    sudo -H -u "$OE_USER" bash -c "source $venv_path/bin/activate && pip3 install num2words ofxparse dbfread ebaysdk firebase_admin pyOpenSSL && deactivate"
     sudo npm install -g less
     sudo npm install -g less-plugin-clean-css
 fi
-
-echo -e "\n---- Create custom module directory ----"
-sudo su $OE_USER -c "mkdir $OE_HOME"
-sudo su $OE_USER -c "mkdir $OE_HOME/${OE_USER}-custom-addons"
-
-echo -e "\n---- Setting permissions on home folder ----"
-sudo chown -R $OE_USER:$OE_USER $OE_HOME
 
 echo -e "* Create server config file"
 sudo touch /etc/${OE_CONFIG}.conf
@@ -192,7 +206,7 @@ fi
 sudo su root -c "printf 'logfile = /var/log/${OE_USER}/${OE_CONFIG}.log\n' >> /etc/${OE_CONFIG}.conf"
 
 if [ $IS_ENTERPRISE = "True" ]; then
-    sudo su root -c "printf 'addons_path=${OE_HOME}/enterprise/custom-addons,${OE_HOME_EXT}/addons\n' >> /etc/${OE_CONFIG}.conf"
+    sudo su root -c "printf 'addons_path=${OE_HOME}/${OE_USER}-custom-addons,${OE_HOME_EXT}/addons,${OE_HOME_EXT}/enterprise-addons\n' >> /etc/${OE_CONFIG}.conf"
 else
     sudo su root -c "printf 'addons_path=${OE_HOME}/${OE_USER}-custom-addons,${OE_HOME_EXT}/addons\n' >> /etc/${OE_CONFIG}.conf"
 fi
@@ -240,6 +254,9 @@ User=$OE_USER
 Group=$OE_USER
 ExecStart=$OE_HOME/$OE_USER-venv/bin/python3 $OE_HOME/$OE_CONFIG/odoo-bin -c /etc/$OE_CONFIG.conf
 StandardOutput=journal+console
+Restart=always
+RestartSec=5
+
 
 [Install]
 WantedBy=multi-user.target
@@ -374,8 +391,14 @@ echo "User service: $OE_USER"
 echo "Configuraton file location: /etc/${OE_CONFIG}.conf"
 echo "Logfile location: /var/log/$OE_USER"
 echo "User PostgreSQL: $OE_USER"
-echo "Code location: $OE_HOME/$OE_CONFIG"
-echo "Addons folder: $OE_HOME/$OE_CONFIG/addons/"
+if [ $IS_ENTERPRISE = "True" ]; then
+    echo "Code location:$OE_HOME_EXT"
+    echo "Addons folder: $OE_HOME_EXT/addons/"
+    echo "Enterprise Addons folder:$OE_HOME_EXT/enterprise-addons"  
+else
+    echo "Code location: $OE_HOME_EXT"
+    echo "Addons folder: $OE_HOME_EXT/addons/"
+fi
 echo "Password superadmin (database): $OE_SUPERADMIN"
 echo "Start Odoo service: sudo service $OE_USER start"
 echo "Stop Odoo service: sudo service $OE_USER stop"
@@ -384,3 +407,4 @@ if [ $INSTALL_NGINX = "True" ]; then
   echo "Nginx configuration file: /etc/nginx/sites-available/$WEBSITE_NAME"
 fi
 echo "-----------------------------------------------------------"
+sudo systemctl status $OE_USER.service
