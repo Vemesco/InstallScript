@@ -1,6 +1,6 @@
 #!/bin/bash
 ################################################################################
-# Script for installing Odoo on Ubuntu 16.04, 18.04, 20.04 and 22.04 (could be used for other version too)
+# Script for installing Odoo on Ubuntu 17.04, 18.04, 20.04 and 22.04 (could be used for other version too)
 # Author: Yenthe Van Ginneken
 #-------------------------------------------------------------------------------
 # This script will install Odoo on your Ubuntu server. It can install multiple Odoo instances
@@ -14,18 +14,18 @@
 # ./odoo-install
 ################################################################################
 
-OE_USER="odoo16"
+OE_USER="odoo17"
 OE_HOME="/opt/$OE_USER"
-OE_CONFIG="${OE_USER}-server"
+OE_CONFIG="${OE_USER}"
 OE_HOME_EXT="$OE_HOME/$OE_CONFIG"
 # The default port where this Odoo instance will run under (provided you use the command -c in the terminal)
 # Set to true if you want to install it, false if you don't need it or have it already installed.
 INSTALL_WKHTMLTOPDF="True"
 # Set the default Odoo port (you still have to use -c /etc/odoo-server.conf for example to use this.)
 OE_PORT="8069"
-# Choose the Odoo version which you want to install. For example: 16.0, 15.0, 14.0 or saas-22. When using 'master' the master version will be installed.
-# IMPORTANT! This script contains extra libraries that are specifically needed for Odoo 16.0
-OE_VERSION="16.0"
+# Choose the Odoo version which you want to install. For example: 17.0, 15.0, 14.0 or saas-22. When using 'master' the master version will be installed.
+# IMPORTANT! This script contains extra libraries that are specifically needed for Odoo 17.0
+OE_VERSION="17.0"
 # Set this to True if you want to install the Odoo enterprise version!
 IS_ENTERPRISE="False"
 # Installs postgreSQL V14 instead of defaults (e.g V12 for Ubuntu 20/22) - this improves performance
@@ -49,7 +49,7 @@ ADMIN_EMAIL="admin@vemesco.com"
 ## === Ubuntu Trusty x64 & x32 === (for other distributions please replace these two links,
 ## in order to have correct version of wkhtmltopdf installed, for a danger note refer to
 ## https://github.com/odoo/odoo/wiki/Wkhtmltopdf ):
-## https://www.odoo.com/documentation/16.0/administration/install.html
+## https://www.odoo.com/documentation/17.0/administration/install.html
 
 # Check if the operating system is Ubuntu 22.04
 if [[ $(lsb_release -r -s) == "22.04" ]]; then
@@ -195,7 +195,7 @@ echo -e "* Creating server config file"
 sudo su root -c "printf '[options] \n; This is the password that allows database operations:\n' >> /etc/${OE_CONFIG}.conf"
 if [ $GENERATE_RANDOM_PASSWORD = "True" ]; then
     echo -e "* Generating random admin password"
-    OE_SUPERADMIN=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 16 | head -n 1)
+    OE_SUPERADMIN=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 17 | head -n 1)
 fi
 sudo su root -c "printf 'admin_passwd = ${OE_SUPERADMIN}\n' >> /etc/${OE_CONFIG}.conf"
 if [ $OE_VERSION > "11.0" ];then
@@ -297,7 +297,7 @@ server {
   error_log       /var/log/nginx/$OE_USER-error.log;
 
   #   increase    proxy   buffer  size
-  proxy_buffers   16  64k;
+  proxy_buffers   17  64k;
   proxy_buffer_size   128k;
 
   proxy_read_timeout 900s;
