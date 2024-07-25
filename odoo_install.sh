@@ -16,7 +16,7 @@
 
 OE_USER="odoo14"
 OE_HOME="/opt/$OE_USER"
-OE_CONFIG="${OE_USER}-server"
+OE_CONFIG="${OE_USER}"
 OE_HOME_EXT="$OE_HOME/$OE_CONFIG"
 # The default port where this Odoo instance will run under (provided you use the command -c in the terminal)
 # Set to true if you want to install it, false if you don't need it or have it already installed.
@@ -144,7 +144,7 @@ sudo git clone --depth 1 --branch $OE_VERSION https://www.github.com/odoo/odoo $
 
 echo -e "\n---- Create custom module directory ----"
 sudo su $OE_USER -c "mkdir $OE_HOME_EXT/enterprise-addons"
-sudo su $OE_USER -c "mkdir $OE_HOME/${OE_USER}-custom-addons"
+#sudo su $OE_USER -c "mkdir $OE_HOME/${OE_USER}-custom-addons"
 
 echo -e "\n---- Setting permissions on home folder ----"
 sudo chown -R $OE_USER:$OE_USER $OE_HOME
