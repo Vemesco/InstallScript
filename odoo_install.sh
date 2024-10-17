@@ -14,7 +14,7 @@
 # ./odoo-install
 ################################################################################
 
-OE_USER="odoo17"
+OE_USER="odoo18"
 OE_HOME="/opt/$OE_USER"
 OE_CONFIG="${OE_USER}"
 OE_HOME_EXT="$OE_HOME/$OE_CONFIG"
