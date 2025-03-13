@@ -142,6 +142,13 @@ echo -e "\n---- Create custom module directory ----"
 sudo su $OE_USER -c "mkdir $OE_HOME/custom"
 sudo su $OE_USER -c "mkdir $OE_HOME/custom/addons"
 
+if [ "$IS_ENTERPRISE" = "False" ]; then
+    echo -e "\n---- Cloning community custom addons ----"
+    sudo git clone --depth 1 --branch $OE_VERSION https://github.com/odoomates/odooapps $OE_HOME/${OE_USER}-custom-addons
+else
+    echo -e "\n---- Skipping community custom addons cloning because Enterprise version is selected ----"
+fi
+
 echo -e "\n---- Setting permissions on home folder ----"
 sudo chown -R $OE_USER:$OE_USER $OE_HOME/*
 

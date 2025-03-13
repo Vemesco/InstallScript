@@ -146,6 +146,13 @@ echo -e "\n---- Create custom module directory ----"
 sudo su $OE_USER -c "mkdir $OE_HOME_EXT/enterprise-addons"
 sudo su $OE_USER -c "mkdir $OE_HOME/${OE_USER}-custom-addons"
 
+if [ "$IS_ENTERPRISE" = "False" ]; then
+    echo -e "\n---- Cloning community custom addons ----"
+    sudo git clone --depth 1 --branch $OE_VERSION https://github.com/odoomates/odooapps $OE_HOME/${OE_USER}-custom-addons
+else
+    echo -e "\n---- Skipping community custom addons cloning because Enterprise version is selected ----"
+fi
+
 echo -e "\n---- Setting permissions on home folder ----"
 sudo chown -R $OE_USER:$OE_USER $OE_HOME
 
@@ -188,7 +195,7 @@ if [ $IS_ENTERPRISE = "True" ]; then
     sudo npm install -g less
     sudo npm install -g less-plugin-clean-css
 fi
-
+sudo git clone --depth 1 --branch $OE_VERSION https://github.com/odoomates/odooapps $OE_HOME/${OE_USER}-custom-addons
 echo -e "* Create server config file"
 sudo touch /etc/${OE_CONFIG}.conf
 echo -e "* Creating server config file"
