@@ -148,7 +148,12 @@ sudo su $OE_USER -c "mkdir $OE_HOME/${OE_USER}-custom-addons"
 
 if [ "$IS_ENTERPRISE" = "False" ]; then
     echo -e "\n---- Cloning community custom addons ----"
-    sudo git clone --depth 1 --branch $OE_VERSION https://github.com/odoomates/odooapps $OE_HOME/${OE_USER}-custom-addons
+    sudo git clone --depth 1 --branch $OE_VERSION https://github.com/odoomates/odooapps $OE_HOME/${OE_USER}-custom-addons-mates
+    echo -e "\n---- Downloading and extracting muk_web_theme ----"
+    cd /tmp
+    wget https://apps.odoo.com/loempia/download/muk_web_theme.zip -O muk_web_theme.zip
+    unzip muk_web_theme.zip -d muk_web_theme_extracted
+    sudo mv muk_web_theme_extracted/* $OE_HOME/${OE_USER}-custom-addons/
 else
     echo -e "\n---- Skipping community custom addons cloning because Enterprise version is selected ----"
 fi
@@ -195,7 +200,6 @@ if [ $IS_ENTERPRISE = "True" ]; then
     sudo npm install -g less
     sudo npm install -g less-plugin-clean-css
 fi
-sudo git clone --depth 1 --branch $OE_VERSION https://github.com/odoomates/odooapps $OE_HOME/${OE_USER}-custom-addons
 echo -e "* Create server config file"
 sudo touch /etc/${OE_CONFIG}.conf
 echo -e "* Creating server config file"
