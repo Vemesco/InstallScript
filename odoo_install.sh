@@ -144,7 +144,16 @@ sudo git clone --depth 1 --branch $OE_VERSION https://www.github.com/odoo/odoo $
 
 #echo -e "\n---- Create custom module directory ----"
 #sudo su $OE_USER -c "mkdir $OE_HOME_EXT/enterprise-addons"
-#sudo su $OE_USER -c "mkdir $OE_HOME/${OE_USER}-custom-addons"
+sudo su $OE_USER -c "mkdir $OE_HOME/${OE_USER}-custom-addons"
+
+if [ "$IS_ENTERPRISE" = "False" ]; then
+    echo -e "\n---- Cloning community custom addons ----"
+    sudo git clone --depth 1 --branch $OE_VERSION https://github.com/odoomates/odooapps $OE_HOME/${OE_USER}-custom-addons-mates
+    echo -e "\n---- Cloning community muk custom addons ----"
+    sudo git clone --depth 1 --branch $OE_VERSION https://github.com/muk-it/muk_web.git $OE_HOME/${OE_USER}-custom-addons-muk
+else
+    echo -e "\n---- Skipping community custom addons cloning because Enterprise version is selected ----"
+fi
 
 echo -e "\n---- Setting permissions on home folder ----"
 sudo chown -R $OE_USER:$OE_USER $OE_HOME
