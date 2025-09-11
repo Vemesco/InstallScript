@@ -51,15 +51,31 @@ ADMIN_EMAIL="admin@vemesco.com"
 ## https://github.com/odoo/odoo/wiki/Wkhtmltopdf ):
 ## https://www.odoo.com/documentation/17.0/administration/install.html
 
-# Check if the operating system is Ubuntu 22.04
-if [[ $(lsb_release -r -s) == "22.04" ]]; then
-    WKHTMLTOX_X64="https://packages.ubuntu.com/jammy/wkhtmltopdf"
-    WKHTMLTOX_X32="https://packages.ubuntu.com/jammy/wkhtmltopdf"
-    #No Same link works for both 64 and 32-bit on Ubuntu 22.04
-else
-    # For older versions of Ubuntu
-    WKHTMLTOX_X64="https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.5/wkhtmltox_0.12.5-1.$(lsb_release -c -s)_amd64.deb"
-    WKHTMLTOX_X32="https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.5/wkhtmltox_0.12.5-1.$(lsb_release -c -s)_i386.deb"
+# Install Wkhtmltopdf if needed
+#--------------------------------------------------
+if [ $INSTALL_WKHTMLTOPDF = "True" ]; then
+    echo -e "\n---- Install Wkhtmltopdf ----"
+    
+    # Install libssl1.1
+    echo -e "\n---- Downloading and installing libssl1.1 ----"
+    wget http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.0g-2ubuntu4_amd64.deb
+    sudo dpkg -i libssl1.1_1.1.0g-2ubuntu4_amd64.deb
+    
+    # Install xfonts
+    echo -e "\n---- Installing xfonts-75dpi and xfonts-base ----"
+    sudo apt install -y xfonts-75dpi xfonts-base
+    
+    # Install wkhtmltopdf
+    echo -e "\n---- Downloading and installing wkhtmltopdf ----"
+    wget https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.5/wkhtmltox_0.12.5-1.focal_amd64.deb
+    sudo dpkg -i wkhtmltox_0.12.5-1.focal_amd64.deb
+    
+    # FIx dependencies if dpkg fails
+    sudo apt-get install -f -y
+
+    # Clear up downloaded files
+    rm libssl1.1_1.1.0g-2ubuntu4_amd64.deb
+    rm wkhtmltox_0.12.5-1.focal_amd64.deb
 fi
 
 #--------------------------------------------------
@@ -98,34 +114,6 @@ fi
 
 echo -e "\n---- Creating the ODOO PostgreSQL User  ----"
 sudo su - postgres -c "createuser -s $OE_USER" 2> /dev/null || true
-
-#--------------------------------------------------
-# Install Wkhtmltopdf if needed
-#--------------------------------------------------
-if [ $INSTALL_WKHTMLTOPDF = "True" ]; then
-  echo -e "\n---- Install wkhtml and place shortcuts on correct place for ODOO ----"
-  #pick up correct one from x64 & x32 versions:
-  if [ "`getconf LONG_BIT`" == "64" ];then
-      _url=$WKHTMLTOX_X64
-  else
-      _url=$WKHTMLTOX_X32
-  fi
-  sudo wget $_url
-  
-
-  if [[ $(lsb_release -r -s) == "22.04" ]]; then
-    # Ubuntu 22.04 LTS
-    sudo apt install wkhtmltopdf -y
-  else
-      # For older versions of Ubuntu
-    sudo gdebi --n `basename $_url`
-  fi
-  
-  sudo ln -s /usr/local/bin/wkhtmltopdf /usr/bin
-  sudo ln -s /usr/local/bin/wkhtmltoimage /usr/bin
-else
-  echo "Wkhtmltopdf isn't installed due to the choice of the user!"
-fi
 
 echo -e "\n---- Create ODOO system user ----"
 sudo adduser --system --quiet --shell=/bin/bash --home=$OE_HOME --gecos 'ODOO' --group $OE_USER
