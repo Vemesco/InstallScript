@@ -67,7 +67,7 @@ server {
     proxy_read_timeout 900s;
     proxy_connect_timeout 900s;
     proxy_send_timeout 900s;
-    client_max_body_size 0;
+    client_max_body_size 200;
 
     gzip on;
     gzip_min_length 1100;
