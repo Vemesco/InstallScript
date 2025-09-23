@@ -118,6 +118,12 @@ sudo certbot --nginx -d $DOMAIN_PROD --email $ADMIN_EMAIL --agree-tos --non-inte
 sudo certbot --nginx -d $DOMAIN_TEST --email $ADMIN_EMAIL --agree-tos --non-interactive
 
 # ========================
+# SOBRESCRIBIR CONFIG FINAL CON SSL
+# ========================
+echo "---- Refrescando configuración Nginx con SSL ----"
+sudo /etc/InstallScript/nginx_conf_refresh.sh
+
+# ========================
 # NOTA ODOO
 # ========================
 echo "✅ Instalación finalizada"
