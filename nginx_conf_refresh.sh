@@ -8,11 +8,11 @@ echo "============================================"
 # ========================
 # VARIABLES
 # ========================
-DOMAIN_PROD="intranet.zolectrum.com"
+DOMAIN_PROD=".com"
 ODOO_PORT_PROD="8069"
 LONGPOLLING_PROD="8072"
 
-DOMAIN_TEST="test.zolectrum.com"
+DOMAIN_TEST=".com"
 ODOO_PORT_TEST="8010"
 LONGPOLLING_TEST="8073"
 
