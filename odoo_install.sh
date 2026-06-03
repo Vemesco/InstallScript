@@ -14,7 +14,7 @@
 # ./odoo-install
 ################################################################################
 
-OE_USER="odoo18"
+OE_USER="odoo19"
 OE_HOME="/opt/$OE_USER"
 OE_CONFIG="${OE_USER}"
 OE_HOME_EXT="$OE_HOME/$OE_CONFIG"
@@ -25,7 +25,7 @@ INSTALL_WKHTMLTOPDF="True"
 OE_PORT="8069"
 # Choose the Odoo version which you want to install. For example: 17.0, 15.0, 14.0 or saas-22. When using 'master' the master version will be installed.
 # IMPORTANT! This script contains extra libraries that are specifically needed for Odoo 17.0
-OE_VERSION="18.0"
+OE_VERSION="19.0"
 # Set this to True if you want to install the Odoo enterprise version!
 IS_ENTERPRISE="False"
 # Installs postgreSQL V14 instead of defaults (e.g V12 for Ubuntu 20/22) - this improves performance
