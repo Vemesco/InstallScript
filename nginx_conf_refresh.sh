@@ -8,11 +8,11 @@ echo "============================================"
 # ========================
 # VARIABLES
 # ========================
-DOMAIN_PROD=".com"
+DOMAIN_PROD="dominio.com.co"
 ODOO_PORT_PROD="8069"
 LONGPOLLING_PROD="8072"
 
-DOMAIN_TEST=".com"
+DOMAIN_TEST="test.dominio.com.co"
 ODOO_PORT_TEST="8010"
 LONGPOLLING_TEST="8073"
 
@@ -25,7 +25,7 @@ echo "============================================"
 # ========================
 
 # Producción
-cat > /etc/nginx/sites-available/$DOMAIN_PROD.conf <<EOF
+sudo tee /etc/nginx/sites-available/$DOMAIN_PROD.conf > /dev/null <<EOF
 server {
     listen 80;
     server_name $DOMAIN_PROD;
@@ -66,7 +66,7 @@ server {
 EOF
 
 # Test
-cat > /etc/nginx/sites-available/$DOMAIN_TEST.conf <<EOF
+sudo tee /etc/nginx/sites-available/$DOMAIN_TEST.conf > /dev/null <<EOF
 server {
     listen 80;
     server_name $DOMAIN_TEST;
@@ -106,8 +106,9 @@ server {
 }
 EOF
 
-sudo ln -sf /etc/nginx/sites-available/$DOMAIN_PROD.conf /etc/nginx/sites-enabled/
-sudo ln -sf /etc/nginx/sites-available/$DOMAIN_TEST.conf /etc/nginx/sites-enabled/
+sudo ln -sfn /etc/nginx/sites-available/$DOMAIN_PROD.conf /etc/nginx/sites-enabled/$DOMAIN_PROD.conf
+sudo ln -sfn /etc/nginx/sites-available/$DOMAIN_TEST.conf /etc/nginx/sites-enabled/$DOMAIN_TEST.conf
+sudo rm -f /etc/nginx/sites-enabled/default
 
 # ========================
 # REINICIO NGINX

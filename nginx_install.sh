@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 echo "============================================"
 echo " 🚀 Instalador Nginx + Odoo (Producción / Test)"
 echo "============================================"
@@ -8,11 +10,11 @@ echo "============================================"
 # ========================
 # VARIABLES FIJAS
 # ========================
-DOMAIN_PROD=".com"
+DOMAIN_PROD="dominio.com.co"
 ODOO_PORT_PROD="8069"
 LONGPOLLING_PROD="8072"
 
-DOMAIN_TEST=".com"
+DOMAIN_TEST="test.dominio.com.co"
 ODOO_PORT_TEST="8010"
 LONGPOLLING_TEST="8073"
 
@@ -57,7 +59,7 @@ sudo ufw reload
 echo "---- Creando configuración HTTP temporal (sin SSL) ----"
 
 # Producción
-cat > /etc/nginx/sites-available/$DOMAIN_PROD.conf <<EOF
+sudo tee /etc/nginx/sites-available/$DOMAIN_PROD.conf > /dev/null <<EOF
 server {
     listen 80;
     server_name $DOMAIN_PROD;
@@ -81,7 +83,7 @@ server {
 EOF
 
 # Test
-cat > /etc/nginx/sites-available/$DOMAIN_TEST.conf <<EOF
+sudo tee /etc/nginx/sites-available/$DOMAIN_TEST.conf > /dev/null <<EOF
 server {
     listen 80;
     server_name $DOMAIN_TEST;
@@ -104,8 +106,9 @@ server {
 }
 EOF
 
-sudo ln -sf /etc/nginx/sites-available/$DOMAIN_PROD.conf /etc/nginx/sites-enabled/
-sudo ln -sf /etc/nginx/sites-available/$DOMAIN_TEST.conf /etc/nginx/sites-enabled/
+sudo ln -sfn /etc/nginx/sites-available/$DOMAIN_PROD.conf /etc/nginx/sites-enabled/$DOMAIN_PROD.conf
+sudo ln -sfn /etc/nginx/sites-available/$DOMAIN_TEST.conf /etc/nginx/sites-enabled/$DOMAIN_TEST.conf
+sudo rm -f /etc/nginx/sites-enabled/default
 
 echo "---- Probando y reiniciando Nginx (HTTP) ----"
 sudo nginx -t && sudo systemctl restart nginx
@@ -121,7 +124,7 @@ sudo certbot --nginx -d $DOMAIN_TEST --email $ADMIN_EMAIL --agree-tos --non-inte
 # SOBRESCRIBIR CONFIG FINAL CON SSL
 # ========================
 echo "---- Refrescando configuración Nginx con SSL ----"
-sudo /etc/InstallScript/nginx_conf_refresh.sh
+sudo "$SCRIPT_DIR/nginx_conf_refresh.sh"
 
 # ========================
 # NOTA ODOO
